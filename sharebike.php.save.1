@@ -1,0 +1,233 @@
+<?php
+
+/*
+ * Function for sharing a  bike
+ * in the database
+*/
+function shareBike($servername, $username, $password, $dbname,$message) {
+  echo "share bike ...\n";
+  $User_Id = $message['from']['id'];
+  //$textType = $message['entities']['0']['type'];
+  $text = $message['text'];
+  // check status
+  $conn = connDatabase($servername, $username, $password, $dbname);
+  $sql0 = "SELECT ref,State_Id,Step,Task
+           FROM State
+           WHERE Task=2 AND State_Id IN
+           (SELECT State_Id FROM Todo
+           WHERE User_Id='$User_Id')
+           ";
+  $result = $conn->query($sql0);
+  if ($result->num_rows > 0){
+    while($row = $result->fetch_assoc()) {
+         $ref = $row["ref"];
+         $stateid = $row["State_Id"]; 
+         $task = $row["Task"];
+         $step = $row["Step"];
+    }
+    if ($step == 1){    // pick a bike to share
+      $answer = "You said ".$text." please select a bike. ";
+      if (strpos($text, "/") === 0){
+        echo "got a command \n";
+        $text = ltrim($text, '/');
+        $bikeChoice = intval($text);
+        echo "your choice --> ".$bikeChoice;
+        // check that a bike number exist 
+        $sql0 = "SELECT Byke_Id, Type
+           FROM Bike
+           WHERE Byke_Id = '$bikeChoice'";
+        $result2 = $conn->query($sql0);
+        if ($result2->num_rows > 0){
+          //update bike number
+          $sql0 = "UPDATE Availability
+                   SET byke_Id = $bikeChoice
+                   WHERE Aval_Id = $ref";
+          if ($conn->query($sql0) === TRUE){
+            // done well
+            $sql1 = "UPDATE State
+                 SET Step = Step + 1
+                 WHERE State_Id = $stateid";
+            if ($conn->query($sql1) === TRUE){
+              // stete step ++ done
+              $answer = "When do you like to share in the next 15 days\n ";
+              $date = strtotime('Today');
+              for ($i=0;$i<15;$i++){
+                $answer .= "/".date('M_d', $date)." ";
+                if (($i+1)%3==0) echo "\n";
+                $date = strtotime(' + 1 day', $date);
+              }
+            }
+          }
+        }
+        else{
+          // stete step ++ OOPS!
+        }
+      }
+      else{
+        //  problem
+      }
+    }
+    else if ($step == 2){    //create  select  the start 
+      $answer = "Please  select the starting time of the sharing window\n";
+      for ($i=6;$i<48;$i++){
+        $h = intval($i / 2);
+        $m =($i % 2) *30;
+        if ($i<20)
+          $str = "   /";
+        else
+          $str = " /";
+        $answer .= $str.$h."h".$m."m";
+        if (($i+1)%6==0) $answer .= "\n";
+      }
+      // check the input day
+      if (strpos($text, "/") === 0){
+        echo "got a command step 2 \n";
+        $text = ltrim($text, '/');
+        $dayChoice = str_replace("_"," ",$text,$n);   // $n need to  be 1
+        echo "your choice 2--> ".$dayChoice."\n";
+
+        $date = strtotime('Today');
+        for ($i=0;$i<5;$i++){
+          echo "/".date('M_d', $date)." ";
+          
+          //if (($i+1)%3==0) echo "\n";
+          $date = st
+        }
+      $sql0 = "UPDATE Bike
+               SET Type = '$text'
+               WHERE Byke_Id = $ref";
+      if ($conn->query($sql0) === TRUE){
+        $sql1 = "INSERT INTO Share (Byke_Id, User_Id)
+                 VALUES ($ref, '$User_Id')";
+        if ($conn->query($sql1) === TRUE){
+          $sql2 = "UPDATE State
+                   SET Step = Step + 1
+                   WHERE State_Id = $stateid";
+          if ($conn->query($sql2) === TRUE){
+            include('menu.php');
+            $answer = "new bike is set \n".$menu;
+            // set todo  to zer
+          }
+        }
+        else{
+          // stete step ++ OOPS!
+        }
+      }}
+      else{
+        //  problem
+      }
+      echo "type chose!!";
+      //$answer = "well done  yor byke is done";
+    }
+    //@@@@@@@@@
+    else if ($step == 3){    //create  select  the start 
+      $answer = "Please select the starting time of the sharing window\n";
+      for ($i=6;$i<48;$i++){
+        $h = intval($i / 2);
+        $m =($i % 2) *30;
+        if ($i<20)
+          $str = "   /";
+        else
+          $str = " /";
+        $answer .= $str.$h."h".$m."m";
+        if (($i+1)%6==0) $answer .= "\n";
+      }
+
+      //echo "@@@@@@";
+      $sql0 = "UPDATE Bike
+               SET Type = '$text'
+               WHERE Byke_Id = $ref";
+      if ($conn->query($sql0) === TRUE){
+        $sql1 = "INSERT INTO Share (Byke_Id, User_Id)
+                 VALUES ($ref, '$User_Id')";
+        if ($conn->query($sql1) === TRUE){
+          $sql2 = "DELETE FROM Todo
+                   WHERE User_Id = '$User_Id'";
+          if ($conn->query($sql2) === TRUE){
+            $sql3 = "DELETE FROM State
+                     WHERE State_Id = $stateid";
+            if ($conn->query($sql3) === TRUE){
+              include('menu.php');
+              $answer = "new bike is set \n".$menu;
+              // set todo  to zer
+            }
+          }
+        }
+        else{
+          // stete step ++ OOPS!
+        }
+      }
+    }
+    else
+      $answer = "2old todo";
+  }
+  else
+  {
+    // step 0
+    $answer = "Please, Select a bike that you like to share.\n\n";
+    $sql0 = "SELECT Byke_Id,Description,Type
+              FROM Bike
+              WHERE Byke_Id IN
+              (SELECT Byke_Id FROM Share
+              WHERE User_Id='$User_Id')
+              ";
+    $result = $conn->query($sql0);
+    if ($result->num_rows > 0){  // no result = no bike  to share
+      echo "bike to share";
+      while($row = $result->fetch_assoc()) {
+         $Byke_Id = $row["Byke_Id"];
+         $Description = $row["Description"]; 
+         $Type = $row["Type"];
+         $answer .= "/".$Byke_Id." ".$Description." ".$Type."\n";
+      }
+      $sql1 = "INSERT INTO Period (Start, End)
+               VALUES (NOW(),NOW())";
+      if ($conn->query($sql1) === TRUE){
+        echo "period done";
+        $Per_Id = $conn->insert_id;
+        $sql2 = "INSERT INTO Availability (Byke_Id, Per_Id)
+                 VALUES ($Byke_Id, $Per_Id)";
+        if ($conn->query($sql2) === TRUE){
+          $ref = $conn->insert_id;
+          $sql3 = "INSERT INTO State (Task, Step, ref)
+                  VALUES (2, 1, $ref)";
+          if ($conn->query($sql3) === TRUE){
+            $stateid = $conn->insert_id;
+            $err = "<br> able  to add the new state <br>";
+            $sql4 = "INSERT INTO Todo (State_Id, User_Id)
+                     VALUES ($stateid, '$User_Id')";
+            if ($conn->query($sql4) === TRUE){
+              $err = "<br> new todo added <br>"; 
+            }
+            else{
+              $err = "<br> unable  to add the new todo <br>";
+            }
+          }
+        }
+      }
+      /*
+        $stateid = $conn->insert_id;
+        $err = "<br> able  to add the new user <br>";
+        $sql2 = "INSERT INTO Todo (State_Id, User_Id)
+                 VALUES ($stateid, '$User_Id')";
+        if ($conn->query($sql2) === TRUE){
+          $err = "<br> new user added correctly <br>"; 
+        }
+        else{
+          $err = "<br> unable  to add the new user <br>";
+        }
+      }
+      else{
+        $err = "<br> unable  to add the new user <br>";
+      }
+    }
+    else{
+    */
+    }
+    else{
+      $answer = "Sorry, you have to describe a /newbike first.\n";
+    }
+  }
+  return $answer;
+}
+?>
