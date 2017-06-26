@@ -141,7 +141,7 @@ function srcBike($servername, $username, $password, $dbname, $message) {
       }
     }
     else if ($step == 3){
-      $answer = "Please select the starting time of the sharing window\n";
+      $answer = "Please select the starting time of the sharing window \n";
       for ($i=6;$i<48;$i++){
         $h = intval($i / 2);
         $m =($i % 2) *30;
@@ -155,8 +155,8 @@ function srcBike($servername, $username, $password, $dbname, $message) {
       if (strpos($text, "/") === 0){
         echo "got a command step 3 \n";
         $text = ltrim($text, '/');
-        $timeChoice = str_replace("h",":",$text,$n);   // $n need to  be 1
-        $timeChoice = str_replace("m","",$timeChoice,$n);   // $n need to  be 1
+        $timeChoice = str_replace("h",":",$text,$n);   // $n needs to  be 1
+        $timeChoice = str_replace("m","",$timeChoice,$n);   // $n needs to  be 1
         //$timeChoice .=":00";
         echo "your choice 2--> ".$timeChoice."\n";
         $flag = 0;
@@ -171,7 +171,7 @@ function srcBike($servername, $username, $password, $dbname, $message) {
           }
         }
         if  ($flag = 0){
-          $answer = " i dont recognize  the time";
+          $answer = " I dont recognize  the time";
         }
         else{
           $sql0 = "UPDATE Period
@@ -185,7 +185,7 @@ function srcBike($servername, $username, $password, $dbname, $message) {
                      SET Step = Step + 1
                      WHERE State_Id = $stateid";
             if ($conn->query($sql2) === TRUE){
-              $answer = " How long  are  you willing to take the bike";
+              $answer = "For how long are you willing to take the bike ? \n";
               for ($i=1;$i<21;$i++){
                 if ($i<10)
                   $str = "h    ";
@@ -202,7 +202,7 @@ function srcBike($servername, $username, $password, $dbname, $message) {
     } // end of step 3
     else if ($step == 4){
       echo "@@ step 4 @@";
-      $answer = " How long  are  you willing to share your bike \n";
+      $answer = "Please try again.\n For how long are you willing to share your bike \n";
       for ($i=1;$i<21;$i++){
         if ($i<10)
           $str = "h    ";
@@ -338,13 +338,14 @@ $answer .= <<<'EOD'
 %26key=AIzaSyAVfMEd2vXGTt6qT11pW7I8B0sOVhhE0n8">Enlarge the map</a>
 EOD;
 $n=1;
-$answer .= "\n<b>Please select a bike</b>";
+$answer .= "\n<b>Please select a bike</b>\n";
 foreach ($markbike as $row) {
                       echo $row[0]."\n";
                       echo $row[1]."\n";
                       echo $row[2],"\n";
 $answer .= " /".$n."_bike \n";
 $n++;
+$answer .= " /Abort the search \n";
 }
                   }
                 }
@@ -355,9 +356,9 @@ $n++;
       }
     } // end 4
     else if ($step == 5){
-      $answer = "Selection not recognised\n".
+      $answer = "No bike available or Search aborted.  \n".
                 "Try to search again a bike /srcbike \n".
-                "or visualize other option /menu \n";
+                "Or visualize other option /menu \n";
       echo "step 5";
       $sql3 = "DELETE FROM Todo
              WHERE User_Id = '$User_Id'";
